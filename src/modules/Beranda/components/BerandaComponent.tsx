@@ -44,17 +44,6 @@ const BerandaComponent: React.FC<BerandaProps> = ({
           }}
         />
 
-        <TextInput
-          placeholder="Deadline (opsional)"
-          value={deadline}
-          onChangeText={setDeadline}
-          style={{
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: 10,
-          }}
-        />
-
         <TouchableOpacity
           onPress={() => {
             if (text.trim().length > 0) {
@@ -75,45 +64,70 @@ const BerandaComponent: React.FC<BerandaProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* List Tugas */}
       <FlatList
         data={todos}
         style={{ marginTop: 25 }}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View
-            style={{
-              paddingVertical: 12,
-              borderBottomWidth: 1,
-              borderColor: '#ddd',
-            }}
-          >
-            <TouchableOpacity onPress={() => onOpenDetail(item)}>
+          <TouchableOpacity onPress={() => onOpenDetail(item)}>
+            <View
+              style={{
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderColor: '#ddd',
+              }}
+            >
               <Text
                 style={{
-                  fontSize: 18,
+                  fontSize: 20,
                   textDecorationLine:
                     item.status === 'done' ? 'line-through' : 'none',
                 }}
               >
                 {item.title}
               </Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => onToggle(item.id)}>
-              <Text style={{ fontSize: 12, color: '#007bff', marginTop: 5 }}>
-                Status: {item.status}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginTop: 5,
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 16, color: '#007bff', marginTop: 5 }}>
+                  Status: {item.status}
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: 'green',
+                    borderRadius: 5,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => onToggle(item.id)}
+                >
+                  <Text style={{ color: 'white' }}>Change Status</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 12, color: '#aaa' }}>
+                Dibuat: {item.created_at}
               </Text>
-            </TouchableOpacity>
 
-            <Text style={{ fontSize: 12, color: '#aaa' }}>
-              Dibuat: {item.created_at}
-            </Text>
-
-            <TouchableOpacity onPress={() => onDelete(item.id)}>
-              <Text style={{ color: 'red', marginTop: 5 }}>Hapus</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={{
+                  width: 100,
+                  padding: 5,
+                }}
+                onPress={() => onDelete(item.id)}
+              >
+                <Text style={{ color: 'red', marginTop: 5 }}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
         )}
       />
     </View>
