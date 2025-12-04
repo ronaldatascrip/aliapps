@@ -1,0 +1,85 @@
+# .github/workflows/android_build.yml
+name: Android CI Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  android_debug_and_release:
+    runs-on: ubuntu-latest # Menggunakan runner Linux
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Setup Environment
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17' # Versi Java yang umum untuk RN
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Versi Node.js yang disarankan
+
+      - name: Install dependencies
+        run: npm install
+
+      # 2. Persiapan Android
+      - name: Grant execution permission to gradlew
+        run: chmod +x android/gradlew
+
+      - name: Set up NDK (Disarankan)
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r25b
+
+      # ===============================
+      # BUILD DEBUG (Selalu Dijalankan)
+      # ===============================
+      - name: Build Android Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # ===============================
+      # BUILD RELEASE (Hanya di Cabang MAIN)
+      # ===============================
+      - name: Run Release Build (If on main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Membuat file .jks dari GitHub Secret (Base64)
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+
+          # Membuat file secrets.properties untuk diakses oleh Gradle
+          echo "MYAPP_UPLOAD_STORE_FILE=release.jks" > android/secrets.properties
+          echo "MYAPP_UPLOAD_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> android/secrets.properties
+          echo "MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> android/secrets.properties
+          echo "MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> android/secrets.properties
+
+          cd android
+          # Build AAB (Android App Bundle) untuk Play Store
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload Release AAB (If on main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
